@@ -1,0 +1,22 @@
+.play-button {
+    -fx-background-color:  #212529;
+    -fx-background-radius: 50px;
+    -fx-pref-width: 50;
+    -fx-pref-height: 50;
+    -fx-border-width: 2;
+    -fx-border-color: white;
+    -fx-border-radius: 50;
+}
+.control-button {
+    -fx-fit-width: 40;
+    -fx-pref-height: 40;
+}
+.progress-bar .track {
+    -fx-padding: 10;
+    -fx-background-radius: 50;
+    -fx-background-color:  #212529;
+}
+.progress-bar .bar {
+    -fx-background-color: linear-gradient(to left, #FF2969, #FF5A3A);
+    -fx-background-radius: 50;
+}
