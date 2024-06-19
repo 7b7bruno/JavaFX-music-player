@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.image.Image?>
 <?import javafx.scene.image.ImageView?>
@@ -11,22 +12,8 @@
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.text.Font?>
 
-
 <AnchorPane prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #444444;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.musicplayer.PlayerController">
    <children>
-      <VBox fx:id="songList" prefHeight="400.0" prefWidth="300.0" style="-fx-background-color: #222222;">
-         <children>
-            <HBox prefHeight="29.0" prefWidth="300.0">
-               <children>
-                  <Label text="Song name - Artist name" textFill="WHITE">
-                     <font>
-                        <Font name="Roboto" size="20.0" />
-                     </font>
-                  </Label>
-               </children>
-            </HBox>
-         </children>
-      </VBox>
       <VBox alignment="BOTTOM_CENTER" layoutX="300.0" prefHeight="400.0" prefWidth="300.0">
          <children>
             <ImageView fx:id="coverImage" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
@@ -57,7 +44,7 @@
                         <Region prefHeight="100.0" prefWidth="20.0" />
                         <Button fx:id="playButton" mnemonicParsing="false" onAction="#play" styleClass="play-button" stylesheets="@styles.css">
                            <graphic>
-                              <ImageView fitHeight="30.0" fitWidth="88.0" pickOnBounds="true" preserveRatio="true">
+                              <ImageView fx:id="playButtonIcon" fitHeight="30.0" fitWidth="88.0" pickOnBounds="true" preserveRatio="true">
                                  <image>
                                     <Image url="@images/play-icon.png" />
                                  </image>
@@ -76,5 +63,6 @@
             </VBox>
          </children>
       </VBox>
+      <ListView fx:id="songList" prefHeight="400.0" prefWidth="300.0" style="-fx-background-color: #222222;" />
    </children>
 </AnchorPane>
