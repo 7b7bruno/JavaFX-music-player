@@ -66,6 +66,12 @@ public class PlayerController {
     private Label songTitle;
 
     @FXML
+    private Label timeLabel;
+
+    @FXML
+    private Label durationLabel;
+
+    @FXML
     void next(MouseEvent event) {
 
     }
@@ -74,6 +80,15 @@ public class PlayerController {
     void play(ActionEvent event) {
         if(!playing && !songLoaded) {
             player = new MediaPlayer(new Media(selectedSong.toURI().toString()));
+            player.setOnReady(new Runnable() {
+                @Override
+                public void run() {
+                    Duration duration = player.getMedia().getDuration();
+                    if(isValidDuration(duration)) {
+                        durationLabel.setText(String.format("%02d:%02d", (int) duration.toMinutes(), (int) duration.toSeconds() % 60));
+                    }
+                }
+            });
             bindProgress(player, progressBar);
             addSeekBehavior(player, progressBar);
             player.play();
@@ -115,6 +130,7 @@ public class PlayerController {
             ID3v2 id3v2 = mp3File.getId3v2Tag();
             String title;
             String artist;
+            int length = 0;
             if(id3v1 != null) {
                 title = id3v1.getTitle();
                 artist = id3v1.getArtist();
@@ -122,13 +138,16 @@ public class PlayerController {
             else if(id3v2 != null) {
                 title = id3v2.getTitle();
                 artist = id3v2.getArtist();
+                length =id3v2.getLength();
             }
             else {
                 title = "Unknown";
                 artist = "Unknown";
+                length = 0;
             }
             songTitle.setText(title);
             songArtist.setText(artist);
+            durationLabel.setText(Integer.toString(length));
             String coverArtPath = getCoverArt();
             if(coverArtPath == null) coverArtPath = "src/main/resources/com/example/musicplayer/images/cover-placeholder.png";
             InputStream stream = new FileInputStream(coverArtPath);
@@ -248,6 +267,17 @@ public class PlayerController {
             return ProgressBar.INDETERMINATE_PROGRESS;
         }, player.currentTimeProperty(), player.getMedia().durationProperty());
         progressBar.progressProperty().bind(binding);
+        bindTime(player, timeLabel);
+    }
+    private void bindTime(MediaPlayer player, Label label) {
+        Binding binding = Bindings.createStringBinding(() -> {
+            Duration currentTime = player.getCurrentTime();
+            if(isValidDuration(currentTime)) {
+                return String.format("%02d:%02d", (int) currentTime.toMinutes(), (int) currentTime.toSeconds() % 60);
+            }
+            return "00:00";
+        }, player.currentTimeProperty());
+        label.textProperty().bind(binding);
     }
     private void addSeekBehavior(MediaPlayer player, ProgressBar bar) {
         EventHandler<MouseEvent> onClickAndOnDragHandler =

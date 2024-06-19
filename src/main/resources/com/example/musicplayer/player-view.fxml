@@ -31,9 +31,15 @@
                   <Font name="Roboto" size="20.0" />
                </font>
             </Label>
-            <VBox alignment="BOTTOM_CENTER" prefHeight="69.0" prefWidth="300.0" style="-fx-background-color: #222222;">
+            <VBox alignment="BOTTOM_CENTER" prefHeight="80.0" prefWidth="300.0" style="-fx-background-color: #222222;">
                <children>
-                  <ProgressBar fx:id="progressBar" prefHeight="18.0" prefWidth="290.0" progress="0.91" stylesheets="@styles.css" />
+                  <HBox alignment="CENTER" prefHeight="31.0" prefWidth="300.0">
+                     <children>
+                        <Label fx:id="timeLabel" text="00:00" textFill="WHITE" />
+                        <ProgressBar fx:id="progressBar" prefHeight="18.0" prefWidth="191.0" progress="1.0" stylesheets="@styles.css" />
+                        <Label fx:id="durationLabel" text="00:00" textFill="WHITE" />
+                     </children>
+                  </HBox>
                   <HBox alignment="CENTER" prefHeight="50.0" prefWidth="300.0">
                      <children>
                         <ImageView fx:id="prevButton" fitHeight="33.0" fitWidth="90.0" onMouseClicked="#previous" pickOnBounds="true" preserveRatio="true" styleClass="control-button">
