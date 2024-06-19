@@ -36,12 +36,18 @@
                   <HBox alignment="CENTER" prefHeight="31.0" prefWidth="300.0">
                      <children>
                         <Label fx:id="timeLabel" text="00:00" textFill="WHITE" />
-                        <ProgressBar fx:id="progressBar" prefHeight="18.0" prefWidth="191.0" progress="1.0" stylesheets="@styles.css" />
+                        <ProgressBar fx:id="progressBar" prefHeight="18.0" prefWidth="228.0" progress="1.0" stylesheets="@styles.css" />
                         <Label fx:id="durationLabel" text="00:00" textFill="WHITE" />
                      </children>
                   </HBox>
                   <HBox alignment="CENTER" prefHeight="50.0" prefWidth="300.0">
                      <children>
+                        <ImageView fx:id="autoplayButton" fitHeight="40.0" fitWidth="40.0" onMouseClicked="#setAutoplay" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@images/autoplay-icon.png" />
+                           </image>
+                        </ImageView>
+                        <Region prefHeight="50.0" prefWidth="30.0" />
                         <ImageView fx:id="prevButton" fitHeight="33.0" fitWidth="90.0" onMouseClicked="#previous" pickOnBounds="true" preserveRatio="true" styleClass="control-button">
                            <image>
                               <Image url="@images/previous-icon.png" />
@@ -61,6 +67,12 @@
                         <ImageView fx:id="nextButton" fitHeight="33.0" fitWidth="90.0" onMouseClicked="#next" pickOnBounds="true" preserveRatio="true" styleClass="control-button">
                            <image>
                               <Image url="@images/next-icon.png" />
+                           </image>
+                        </ImageView>
+                        <Region prefHeight="50.0" prefWidth="30.0" />
+                        <ImageView fx:id="repeatButton" fitHeight="30.0" fitWidth="23.0" onMouseClicked="#setRepeat" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@images/repeat-icon.png" />
                            </image>
                         </ImageView>
                      </children>

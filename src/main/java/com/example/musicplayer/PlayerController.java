@@ -33,46 +33,60 @@ public class PlayerController {
             else return false;
         }
     };
-
     static String path = "songs";
-
     private File selectedSong = null;
+    private int currentSongIndex = 0;
+    private ArrayList<File> songs = new ArrayList<>();
+    private boolean autoPlay = false;
+    private boolean repeat = false;
 
+    @FXML
+    private ImageView autoplayButton;
     @FXML
     private ImageView coverImage;
-
     @FXML
     private ImageView nextButton;
-
     @FXML
     private Button playButton;
-
     @FXML
     private ImageView playButtonIcon;
-
     @FXML
     private ImageView prevButton;
-
     @FXML
     private ProgressBar progressBar;
-
+    @FXML
+    private ImageView repeatButton;
     @FXML
     private Label songArtist;
-
     @FXML
     private ListView<Label> songList;
-
     @FXML
     private Label songTitle;
-
     @FXML
     private Label timeLabel;
-
     @FXML
     private Label durationLabel;
 
     @FXML
     void next(MouseEvent event) {
+        nextSong();
+    }
+
+    void nextSong() {
+        if(currentSongIndex < songs.size() - 1) {
+            currentSongIndex++;
+            songSelected(songs.get(currentSongIndex), true);
+        }
+        else {
+            if(repeat) {
+                currentSongIndex = 0;
+                songSelected(songs.get(currentSongIndex), true);
+            }
+            else {
+                currentSongIndex = 0;
+                songSelected(songs.get(currentSongIndex), false);
+            }
+        }
 
     }
 
@@ -91,6 +105,20 @@ public class PlayerController {
             });
             bindProgress(player, progressBar);
             addSeekBehavior(player, progressBar);
+            player.setOnEndOfMedia(new Runnable() {
+                @Override
+                public void run() {
+                    if(autoPlay) {
+                        nextSong();
+                    }
+                    else {
+                        playButtonIcon.setImage(new Image(getClass().getResource("images/play-icon.png").toExternalForm()));
+                        player.seek(Duration.ZERO);
+                        player.pause();
+                        playing = false;
+                    }
+                }
+            });
             player.play();
             playing = true;
             songLoaded = true;
@@ -112,14 +140,44 @@ public class PlayerController {
     void previous(MouseEvent event) {
 
     }
+    @FXML
+    void setAutoplay(MouseEvent event) {
+        if(autoPlay) {
+            autoPlay = false;
+            autoplayButton.setImage(new Image(getClass().getResource("images/autoplay-icon.png").toExternalForm()));
+        }
+        else {
+            autoPlay = true;
+            autoplayButton.setImage(new Image(getClass().getResource("images/autoplay-icon-selected.png").toExternalForm()));
+        }
+    }
+    @FXML
+    void setRepeat(MouseEvent event) {
+        if(repeat) {
+            repeat = false;
+            repeatButton.setImage(new Image(getClass().getResource("images/repeat-icon.png").toExternalForm()));
+        }
+        else {
+            repeat = true;
+            repeatButton.setImage(new Image(getClass().getResource("images/repeat-icon-selected.png").toExternalForm()));
+        }
+    }
 
-    void songSelected(File song) {
+    void songSelected(File song, boolean play) {
+        playButtonIcon.setImage(new Image(getClass().getResource("images/play-icon.png").toExternalForm()));
         if(player != null) player.stop();
         playing = false;
         songLoaded = false;
         selectedSong = song;
+        currentSongIndex = getSongIndex(song);
         loadMetadata();
-        play(new ActionEvent());
+        if(play) {
+            play(new ActionEvent());
+        }
+    }
+
+    private Integer getSongIndex(File song) {
+        return songs.indexOf(song);
     }
 
     void loadMetadata() {
@@ -130,7 +188,6 @@ public class PlayerController {
             ID3v2 id3v2 = mp3File.getId3v2Tag();
             String title;
             String artist;
-            int length = 0;
             if(id3v1 != null) {
                 title = id3v1.getTitle();
                 artist = id3v1.getArtist();
@@ -138,16 +195,13 @@ public class PlayerController {
             else if(id3v2 != null) {
                 title = id3v2.getTitle();
                 artist = id3v2.getArtist();
-                length =id3v2.getLength();
             }
             else {
                 title = "Unknown";
                 artist = "Unknown";
-                length = 0;
             }
             songTitle.setText(title);
             songArtist.setText(artist);
-            durationLabel.setText(Integer.toString(length));
             String coverArtPath = getCoverArt();
             if(coverArtPath == null) coverArtPath = "src/main/resources/com/example/musicplayer/images/cover-placeholder.png";
             InputStream stream = new FileInputStream(coverArtPath);
@@ -192,7 +246,6 @@ public class PlayerController {
         }
         return null;
     }
-
     private String createFilename(String mimeType) throws Exception {
         String extension;
         int idx;
@@ -210,15 +263,18 @@ public class PlayerController {
             i++;
         }
     }
-
     private boolean fileExists(String str) {
         File f = new File(str);
         return f.exists();
     }
 
     public void initialize() {
+        getAllSongs();
+    }
+
+    public void getAllSongs() {
         songList.setStyle("-fx-background-color: #222222;");
-        ArrayList<File> songs = getSongs(path);
+        songs = getSongs(path);
         ObservableList<Label> songItems = FXCollections.observableArrayList();
         for(File song: songs) {
             Label songButton = createSongButton(song);
@@ -229,7 +285,12 @@ public class PlayerController {
         songList.setItems(songItems);
         songList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
             if(newValue != null) {
-                songSelected(new File(path + "/" + newValue.getText()));
+                if(autoPlay) {
+                    songSelected(new File(path + "/" + newValue.getText()), true);
+                }
+                else {
+                    songSelected(new File(path + "/" + newValue.getText()), false);
+                }
             }
         });
     }
@@ -241,7 +302,6 @@ public class PlayerController {
         label.setStyle("-fx-text-fill: white; -fx-font-size: 20px; fx-font-family: 'Roboto';");
         return label;
     }
-
     private static ArrayList<File> getSongs(String path) {
         ArrayList<File> songs = new ArrayList<>();
         File file = new File(path);
@@ -256,7 +316,6 @@ public class PlayerController {
         }
         return songs;
     }
-
     private void bindProgress(MediaPlayer player, ProgressBar progressBar) {
         Binding binding = Bindings.createDoubleBinding(() -> {
             Duration currentTime = player.getCurrentTime();
@@ -292,7 +351,6 @@ public class PlayerController {
         bar.addEventHandler(MouseEvent.MOUSE_CLICKED, onClickAndOnDragHandler);
         bar.addEventHandler(MouseEvent.MOUSE_DRAGGED, onClickAndOnDragHandler);
     }
-
     private boolean isValidDuration(Duration d) {
         return d != null && !d.isIndefinite() && !d.isUnknown();
     }
