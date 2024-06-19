@@ -1,9 +1,12 @@
 package com.example.musicplayer;
 
 import com.mpatric.mp3agic.*;
+import javafx.beans.binding.Binding;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -14,6 +17,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.util.Duration;
 
 import java.io.*;
 import java.nio.file.Paths;
@@ -70,6 +74,8 @@ public class PlayerController {
     void play(ActionEvent event) {
         if(!playing && !songLoaded) {
             player = new MediaPlayer(new Media(selectedSong.toURI().toString()));
+            bindProgress(player, progressBar);
+            addSeekBehavior(player, progressBar);
             player.play();
             playing = true;
             songLoaded = true;
@@ -232,4 +238,32 @@ public class PlayerController {
         return songs;
     }
 
+    private void bindProgress(MediaPlayer player, ProgressBar progressBar) {
+        Binding binding = Bindings.createDoubleBinding(() -> {
+            Duration currentTime = player.getCurrentTime();
+            Duration duration = player.getMedia().getDuration();
+            if(isValidDuration(currentTime) && isValidDuration(duration)) {
+                return currentTime.toMillis() / duration.toMillis();
+            }
+            return ProgressBar.INDETERMINATE_PROGRESS;
+        }, player.currentTimeProperty(), player.getMedia().durationProperty());
+        progressBar.progressProperty().bind(binding);
+    }
+    private void addSeekBehavior(MediaPlayer player, ProgressBar bar) {
+        EventHandler<MouseEvent> onClickAndOnDragHandler =
+                e -> {
+                    Duration duration = player.getMedia().getDuration();
+                    if(isValidDuration(duration)) {
+                        Duration seekTime = duration.multiply(e.getX() / bar.getWidth());
+                        player.seek(seekTime);
+                        e.consume();
+                    }
+                };
+        bar.addEventHandler(MouseEvent.MOUSE_CLICKED, onClickAndOnDragHandler);
+        bar.addEventHandler(MouseEvent.MOUSE_DRAGGED, onClickAndOnDragHandler);
+    }
+
+    private boolean isValidDuration(Duration d) {
+        return d != null && !d.isIndefinite() && !d.isUnknown();
+    }
 }
