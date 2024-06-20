@@ -3,6 +3,7 @@ module com.example.musicplayer {
     requires javafx.fxml;
     requires mp3agic;
     requires javafx.media;
+    requires json.simple;
 
 
     opens com.example.musicplayer to javafx.fxml;

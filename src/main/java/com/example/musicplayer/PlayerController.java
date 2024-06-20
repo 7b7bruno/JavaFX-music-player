@@ -8,10 +8,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
-import javafx.scene.control.ProgressBar;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -19,9 +16,15 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.*;
+
 import java.io.*;
+import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class PlayerController {
     private MediaPlayer player = null;
@@ -35,8 +38,10 @@ public class PlayerController {
     };
     static String path = "songs";
     private File selectedSong = null;
+    private Playlist currentPlaylist = null;
     private int currentSongIndex = 0;
     private ArrayList<File> songs = new ArrayList<>();
+    private ArrayList<Playlist> playLists = new ArrayList<>();
     private boolean autoPlay = false;
     private boolean repeat = false;
 
@@ -66,6 +71,8 @@ public class PlayerController {
     private Label timeLabel;
     @FXML
     private Label durationLabel;
+    @FXML
+    private ComboBox<String> playlistComboBox;
 
     @FXML
     void next(MouseEvent event) {
@@ -269,7 +276,62 @@ public class PlayerController {
     }
 
     public void initialize() {
+        readPlaylists();
+        initComboBox();
         getAllSongs();
+    }
+
+    private void initComboBox() {
+        playlistComboBox.getItems().add("All songs");
+        for(Playlist playlist: playLists) {
+            playlistComboBox.getItems().add(playlist.getName());
+        }
+        playlistComboBox.setOnAction((event) -> {
+            System.out.println(playlistComboBox.getSelectionModel().getSelectedItem());
+            getPlaylistSongs(playlistComboBox.getSelectionModel().getSelectedItem());
+        });
+    }
+
+    public void getPlaylistSongs(String name) {
+        if(name.equals("All songs")) {
+            getAllSongs();
+        }
+        else {
+            Playlist playlist = new Playlist("", new ArrayList<String>());
+            for(Playlist list : playLists) {
+                if(list.getName().equals(name)) {
+                    playlist = list;
+                    break;
+                }
+            }
+            ArrayList<File> allSongs = getSongs(path);
+            ArrayList<File> playlistSongs = new ArrayList<>();
+            for(File song : allSongs) {
+                if(playlist.getSongs().contains(song.getName())) {
+                    playlistSongs.add(song);
+                }
+            }
+            ObservableList<Label> songItems = FXCollections.observableArrayList();
+            for(File song: playlistSongs) {
+                Label songButton = createSongButton(song);
+                if(songButton != null) {
+                    songItems.add(songButton);
+                }
+            }
+            songList.setItems(songItems);
+            songList.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                if(newValue != null) {
+                    if(autoPlay) {
+                        songSelected(new File(path + "/" + newValue.getText()), true);
+                    }
+                    else {
+                        songSelected(new File(path + "/" + newValue.getText()), false);
+                    }
+                }
+            });
+            songs = playlistSongs;
+            System.out.println(playlistSongs);
+        }
     }
 
     public void getAllSongs() {
@@ -353,5 +415,29 @@ public class PlayerController {
     }
     private boolean isValidDuration(Duration d) {
         return d != null && !d.isIndefinite() && !d.isUnknown();
+    }
+
+    private void readPlaylists() {
+        try {
+            URL resourceURL = getClass().getResource("data/playlists.json");
+            File file = new File(resourceURL.getFile());
+            String filePath = file.getAbsolutePath();
+            Object obj = new JSONParser().parse(new FileReader(filePath));
+            JSONObject jo = (JSONObject) obj;
+            JSONArray ja = (JSONArray) jo.get("playlists");
+            for(int i = 0; i < ja.size(); i++) {
+                JSONObject JSONplaylist = (JSONObject) ja.get(i);
+                String name = (String) JSONplaylist.get("name");
+                JSONArray JSONsongs = (JSONArray) JSONplaylist.get("songs");
+                ArrayList<String> songs = new ArrayList<>();
+                for(int j = 0; j < JSONsongs.size(); j++) {
+                    songs.add((String) JSONsongs.get(j));
+                }
+                playLists.add(new Playlist(name, songs));
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
