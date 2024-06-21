@@ -8,12 +8,16 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
+import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import org.json.simple.JSONArray;
@@ -25,12 +29,13 @@ import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Optional;
 
 public class PlayerController {
     private MediaPlayer player = null;
     private boolean songLoaded = false;
     private boolean playing = false;
-    static FileFilter filter = new FileFilter() {
+    public static FileFilter filter = new FileFilter() {
         public boolean accept(File file) {
             if(file.getName().endsWith(".mp3")) return true;
             else return false;
@@ -73,10 +78,105 @@ public class PlayerController {
     private Label durationLabel;
     @FXML
     private ComboBox<String> playlistComboBox;
+    @FXML
+    private ComboBox<String> addToPlaylistComboBox;
+    @FXML
+    private Button playPlaylistButton;
+    @FXML
+    private Button addButton;
+    @FXML
+    private Button deleteButton;
+
+    @FXML
+    void playPlaylist(ActionEvent event) {
+        songSelected(songs.get(0), true);
+    }
+
+    @FXML
+    void addPlaylist(ActionEvent event) throws IOException {
+        Parent root = FXMLLoader.load(getClass().getResource("add-playlist-view.fxml"));
+        Stage stage = (Stage) addButton.getScene().getWindow();
+        Scene scene = new Scene(root);
+        scene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
+        stage.setScene(scene);
+    }
+
+    @FXML
+    void deletePlaylist(ActionEvent event) {
+        if(currentPlaylist.getName().equals("All songs")) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("Cannot delete All songs");
+            alert.setContentText("All songs cannot be deleted.");
+            alert.showAndWait();
+            return;
+        }
+        else {
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Delete Playlist");
+            alert.setHeaderText("Are you sure you want to delete this playlist?");
+            alert.setContentText("This action cannot be undone.");
+
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.get() == ButtonType.OK) {
+                deleteCurrentPlaylist();
+            }
+        }
+    }
+
+    void deleteFromJSON(String playlistName) {
+        try {
+            URL resourceURL = getClass().getResource("data/playlists.json");
+            File file = new File(resourceURL.getFile());
+            String filePath = file.getAbsolutePath();
+            Object obj = new JSONParser().parse(new FileReader(filePath));
+            JSONObject jo = (JSONObject) obj;
+            JSONArray ja = (JSONArray) jo.get("playlists");
+            for(int i = 0; i < ja.size(); i++) {
+                JSONObject JSONplaylist = (JSONObject) ja.get(i);
+                String name = (String) JSONplaylist.get("name");
+                if(name.equals(playlistName)) {
+                    ja.remove(i);
+                    break;
+                }
+            }
+            FileWriter fileWriter = new FileWriter(filePath);
+            fileWriter.write(jo.toJSONString());
+            fileWriter.flush();
+            fileWriter.close();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    void deleteCurrentPlaylist() {
+        deleteFromJSON(currentPlaylist.getName());
+        resetPlayer();
+    }
+
+    void resetPlayer() {
+        try {
+            Parent root = FXMLLoader.load(getClass().getResource("player-view.fxml"));
+            Stage stage = (Stage) addButton.getScene().getWindow();
+            Scene scene = new Scene(root);
+            scene.getStylesheets().add(getClass().getResource("styles.css").toExternalForm());
+            stage.setScene(scene);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
     @FXML
     void next(MouseEvent event) {
-        nextSong();
+        if(currentSongIndex == songs.size() - 1) {
+            currentSongIndex = 0;
+            songSelected(songs.get(currentSongIndex), true);
+        }
+        else {
+            nextSong();
+        }
     }
 
     void nextSong() {
@@ -91,7 +191,7 @@ public class PlayerController {
             }
             else {
                 currentSongIndex = 0;
-                songSelected(songs.get(currentSongIndex), false);
+                songSelected(songs.get(currentSongIndex));
             }
         }
 
@@ -99,6 +199,10 @@ public class PlayerController {
 
     @FXML
     void play(ActionEvent event) {
+        if(selectedSong == null) {
+            songSelected(songs.get(0), true);
+            return;
+        }
         if(!playing && !songLoaded) {
             player = new MediaPlayer(new Media(selectedSong.toURI().toString()));
             player.setOnReady(new Runnable() {
@@ -145,7 +249,26 @@ public class PlayerController {
 
     @FXML
     void previous(MouseEvent event) {
-
+        int seconds = (int) player.getCurrentTime().toSeconds();
+        if(seconds < 2) {
+            previousSong();
+        }
+        else {
+            rewind();
+        }
+    }
+    void previousSong() {
+        if(currentSongIndex > 0) {
+            currentSongIndex--;
+            songSelected(songs.get(currentSongIndex), true);
+        }
+        else {
+            currentSongIndex = songs.size() - 1;
+            songSelected(songs.get(currentSongIndex), true);
+        }
+    }
+    void rewind() {
+        songSelected(selectedSong, true);
     }
     @FXML
     void setAutoplay(MouseEvent event) {
@@ -181,6 +304,15 @@ public class PlayerController {
         if(play) {
             play(new ActionEvent());
         }
+    }
+    void songSelected(File song) {
+        playButtonIcon.setImage(new Image(getClass().getResource("images/play-icon.png").toExternalForm()));
+        if(player != null) player.stop();
+        playing = false;
+        songLoaded = false;
+        selectedSong = song;
+        currentSongIndex = getSongIndex(song);
+        loadMetadata();
     }
 
     private Integer getSongIndex(File song) {
@@ -253,7 +385,7 @@ public class PlayerController {
         }
         return null;
     }
-    private String createFilename(String mimeType) throws Exception {
+    public String createFilename(String mimeType) throws Exception {
         String extension;
         int idx;
         if((idx = mimeType.indexOf('/')) > 0) extension = "." + mimeType.substring(idx + 1).toLowerCase();
@@ -270,7 +402,7 @@ public class PlayerController {
             i++;
         }
     }
-    private boolean fileExists(String str) {
+    public boolean fileExists(String str) {
         File f = new File(str);
         return f.exists();
     }
@@ -278,18 +410,67 @@ public class PlayerController {
     public void initialize() {
         readPlaylists();
         initComboBox();
-        getAllSongs();
+        currentPlaylist = new Playlist("All songs", new ArrayList<String>());
+        getPlaylistSongs(currentPlaylist.getName());
     }
 
     private void initComboBox() {
         playlistComboBox.getItems().add("All songs");
+        addToPlaylistComboBox.getItems().add("All songs");
         for(Playlist playlist: playLists) {
             playlistComboBox.getItems().add(playlist.getName());
+            addToPlaylistComboBox.getItems().add(playlist.getName());
         }
         playlistComboBox.setOnAction((event) -> {
             System.out.println(playlistComboBox.getSelectionModel().getSelectedItem());
             getPlaylistSongs(playlistComboBox.getSelectionModel().getSelectedItem());
         });
+        addToPlaylistComboBox.setOnAction((event) -> {
+            addToPlaylist(addToPlaylistComboBox.getSelectionModel().getSelectedItem());
+        });
+    }
+
+    void addToPlaylist(String playlist) {
+        if(selectedSong == null) {
+            System.out.println("No song slected");
+            return;
+        }
+        try {
+            URL resourceURL = getClass().getResource("data/playlists.json");
+            File file = new File(resourceURL.getFile());
+            String filePath = file.getAbsolutePath();
+            Object obj = new JSONParser().parse(new FileReader(filePath));
+            JSONObject jo = (JSONObject) obj;
+            JSONArray ja = (JSONArray) jo.get("playlists");
+            JSONObject JSONplaylist = null;
+            for(int i = 0; i < ja.size(); i++) {
+                JSONObject jso = (JSONObject) ja.get(i);
+                String name = (String) jso.get("name");
+                if(name.equals(playlist)) {
+                    JSONplaylist = jso;
+                    break;
+                }
+            }
+            if(JSONplaylist != null) {
+                ja.remove(JSONplaylist);
+                ArrayList<String> currentSongs = JSONplaylist.get("songs") == null ? new ArrayList<String>() : (ArrayList<String>) JSONplaylist.get("songs");
+                currentSongs.add(selectedSong.getName());
+                JSONplaylist.put("songs", currentSongs);
+                ja.add(JSONplaylist);
+                jo.put("playlists", ja);
+                FileWriter fileWriter = new FileWriter(filePath);
+                fileWriter.write(jo.toJSONString());
+                fileWriter.flush();
+                fileWriter.close();
+                resetPlayer();
+            }
+            else {
+                System.out.println("Playlist not found");
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void getPlaylistSongs(String name) {
@@ -325,12 +506,13 @@ public class PlayerController {
                         songSelected(new File(path + "/" + newValue.getText()), true);
                     }
                     else {
-                        songSelected(new File(path + "/" + newValue.getText()), false);
+                        songSelected(new File(path + "/" + newValue.getText()));
                     }
                 }
             });
             songs = playlistSongs;
             System.out.println(playlistSongs);
+            currentPlaylist = new Playlist(name, playlist.getSongs());
         }
     }
 
@@ -351,13 +533,18 @@ public class PlayerController {
                     songSelected(new File(path + "/" + newValue.getText()), true);
                 }
                 else {
-                    songSelected(new File(path + "/" + newValue.getText()), false);
+                    songSelected(new File(path + "/" + newValue.getText()));
                 }
             }
         });
+        ArrayList<String> playlistSongs = new ArrayList<>();
+        for(File song: songs) {
+            playlistSongs.add(song.getName());
+        }
+        currentPlaylist = new Playlist("All songs", playlistSongs);
     }
 
-    private static Label createSongButton(File file) {
+    public static Label createSongButton(File file) {
         if(!file.exists()) return null;
         String str = file.getName();
         Label label = new Label(str);
@@ -413,7 +600,7 @@ public class PlayerController {
         bar.addEventHandler(MouseEvent.MOUSE_CLICKED, onClickAndOnDragHandler);
         bar.addEventHandler(MouseEvent.MOUSE_DRAGGED, onClickAndOnDragHandler);
     }
-    private boolean isValidDuration(Duration d) {
+    public boolean isValidDuration(Duration d) {
         return d != null && !d.isIndefinite() && !d.isUnknown();
     }
 

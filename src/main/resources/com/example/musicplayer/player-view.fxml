@@ -17,6 +17,7 @@
    <children>
       <VBox alignment="BOTTOM_CENTER" layoutX="300.0" prefHeight="400.0" prefWidth="300.0">
          <children>
+            <ComboBox fx:id="addToPlaylistComboBox" prefWidth="150.0" promptText="Add to playlist" />
             <ImageView fx:id="coverImage" fitHeight="150.0" fitWidth="200.0" pickOnBounds="true" preserveRatio="true">
                <image>
                   <Image url="@images/cover-placeholder.png" />
@@ -82,7 +83,29 @@
             </VBox>
          </children>
       </VBox>
-      <ListView fx:id="songList" layoutY="35.0" prefHeight="365.0" prefWidth="300.0" style="-fx-background-color: #222222;" />
-      <ComboBox fx:id="playlistComboBox" layoutY="2.0" prefHeight="30.0" prefWidth="139.0" promptText="Choose playlist" />
+      <VBox prefHeight="400.0" prefWidth="300.0">
+         <children>
+            <HBox prefHeight="30.0" prefWidth="300.0">
+               <children>
+                  <ComboBox fx:id="playlistComboBox" prefHeight="30.0" prefWidth="139.0" promptText="Choose playlist" />
+                  <Button fx:id="addButton" mnemonicParsing="false" onAction="#addPlaylist" prefHeight="27.0" prefWidth="27.0" styleClass="add-button" stylesheets="@styles.css" text="+" />
+                  <Button fx:id="deleteButton" mnemonicParsing="false" onAction="#deletePlaylist" prefHeight="27.0" prefWidth="27.0" style="-fx-background-color: red;" styleClass="add-button" stylesheets="@styles.css" text="-" />
+                  <Button fx:id="playlistPlayButton" alignment="TOP_LEFT" mnemonicParsing="false" onAction="#playPlaylist" prefHeight="27.0" prefWidth="108.0" styleClass="playlist-play-button" stylesheets="@styles.css" text="Playlist" textFill="WHITE">
+                     <graphic>
+                        <ImageView fitHeight="19.0" fitWidth="61.0" pickOnBounds="true" preserveRatio="true">
+                           <image>
+                              <Image url="@images/play-icon.png" />
+                           </image>
+                        </ImageView>
+                     </graphic>
+                     <font>
+                        <Font name="Roboto" size="12.0" />
+                     </font>
+                  </Button>
+               </children>
+            </HBox>
+            <ListView fx:id="songList" prefHeight="375.0" prefWidth="300.0" style="-fx-background-color: #222222;" />
+         </children>
+      </VBox>
    </children>
 </AnchorPane>

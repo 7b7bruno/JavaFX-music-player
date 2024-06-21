@@ -100,3 +100,15 @@
 .combo-box-base:disabled {
     -fx-opacity: .4;
 }
+
+.add-button {
+    -fx-background-color: #222222;
+    -fx-text-fill: white;
+    -fx-border-color: #444444;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+.playlist-play-button {
+    -fx-background-color: linear-gradient(to left, #FF2969, #FF5A3A);
+    -fx-background-radius: 10;
+}

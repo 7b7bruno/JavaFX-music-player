@@ -2,29 +2,20 @@ package com.example.musicplayer;
 
 import java.util.ArrayList;
 
+import lombok.Getter;
+import lombok.Setter;
+
 public class Playlist {
+    @Setter
+    @Getter
     private String name;
+    @Setter
+    @Getter
     private ArrayList<String> songs;
 
     public Playlist(String name, ArrayList<String> songs) {
         setName(name);
         setSongs(songs);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public ArrayList<String> getSongs() {
-        return songs;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setSongs(ArrayList<String> songs) {
-        this.songs = songs;
     }
 
     @Override

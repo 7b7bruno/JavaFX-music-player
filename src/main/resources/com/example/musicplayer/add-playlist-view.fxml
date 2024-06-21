@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane prefHeight="400.0" prefWidth="600.0" style="-fx-background-color: #222222;" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.musicplayer.AddPlaylistController">
+   <children>
+      <VBox alignment="TOP_CENTER" prefHeight="400.0" prefWidth="600.0" style="-fx-padding: 30;">
+         <children>
+            <Label alignment="CENTER" prefHeight="14.0" prefWidth="198.0" text="Add playlist" textFill="WHITE">
+               <font>
+                  <Font name="Roboto Black" size="30.0" />
+               </font>
+            </Label>
+            <VBox prefHeight="0.0" prefWidth="163.0">
+               <children>
+                  <Label alignment="CENTER" prefHeight="26.0" prefWidth="126.0" text="Playlist name" textFill="WHITE">
+                     <font>
+                        <Font name="Roboto" size="20.0" />
+                     </font>
+                  </Label>
+                  <TextField fx:id="nameField" prefHeight="25.0" prefWidth="288.0" />
+               </children>
+            </VBox>
+            <VBox prefHeight="200.0" prefWidth="100.0">
+               <children>
+                  <Label alignment="CENTER" prefHeight="26.0" prefWidth="126.0" text="Playlist songs" textFill="WHITE">
+                     <font>
+                        <Font name="Roboto" size="20.0" />
+                     </font>
+                  </Label>
+                  <ListView fx:id="songList" prefHeight="192.0" prefWidth="540.0" />
+                  <Region prefHeight="44.0" prefWidth="540.0" />
+               </children>
+            </VBox>
+            <HBox prefHeight="0.0" prefWidth="540.0">
+               <children>
+                  <Button fx:id="addButton" mnemonicParsing="false" onAction="#add" style="-fx-background-color: green;" text="Add playlist" textFill="WHITE">
+                     <font>
+                        <Font name="Roboto" size="17.0" />
+                     </font>
+                  </Button>
+                  <Region prefHeight="32.0" prefWidth="15.0" />
+                  <Button fx:id="cancelButton" mnemonicParsing="false" onAction="#cancel" style="-fx-background-color: red;" text="Cancel" textFill="WHITE">
+                     <font>
+                        <Font name="Roboto" size="17.0" />
+                     </font>
+                  </Button>
+               </children>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+</AnchorPane>
